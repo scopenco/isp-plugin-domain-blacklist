@@ -9,12 +9,12 @@ Author: Andrey Scopenco <andrey@scopenco.net>
 PLUGIN_NAME = 'domain_blacklist'
 LOG_FILE = '/usr/local/ispmgr/var/ispmgr.log'
 BLACKLISTFILE = '/usr/local/ispmgr/etc/blacklist.txt'
+WHITELISTFILE = '/usr/local/ispmgr/etc/whitelist.txt'
 
 from xml.dom import minidom
 from os import chdir,getpid,access,R_OK
 from sys import exit,stderr
 from cgi import FieldStorage
-from re import compile
 from traceback import format_exc
 
 class ExitOk(Exception):
@@ -145,19 +145,37 @@ if __name__ == "__main__":
 
         log.write('domains %s' % ','.join(domains_idna))
 
+        # check exist domain in 3th black list
+        if not access(WHITELISTFILE, R_OK):
+            raise Exception('%s not found' % WHITELISTFILE)
+        try:
+            with open(WHITELISTFILE, 'r') as f:
+                for line in f:
+                    b_dom = '.%s' % line.strip()
+                    for d in domains_idna:
+                        t_dom = '.%s' % d
+                        if t_dom.endswith(b_dom):
+                            if len(t_dom) == len(b_dom):
+                                raise DomainError(b_dom[1:].decode('idna').encode('utf-8'))
+                            else:
+                                print xml_doc()
+                                raise ExitOk('done')
+
+        except DomainError, e:
+            print xml_error('Использование домена %s разрешено только 3го уровня!' % e.value, 9)
+            raise ExitOk('done')
+
         # check exist domain in black lists
         if not access(BLACKLISTFILE, R_OK):
             raise Exception('%s not found' % BLACKLISTFILE)
         try:
             with open(BLACKLISTFILE, 'r') as f:
                 for line in f:
-                    l_s = line.strip()
-                    check = '.*\.%s' % l_s
-                    p = compile(check)
+                    b_dom = '.%s' % line.strip()
                     for d in domains_idna:
-                        if l_s == d or p.match(d):
-                            raise DomainError(l_s.decode('idna').encode('utf-8'))
-
+                        t_dom = '.%s' % d
+                        if t_dom.endswith(b_dom):
+                            raise DomainError(b_dom[1:].decode('idna').encode('utf-8'))
             print xml_doc()
             raise ExitOk('done')
 
