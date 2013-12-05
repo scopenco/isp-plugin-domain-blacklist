@@ -10,7 +10,9 @@ Installing
 > cp -v etc/ispmgr_mod_domain_blacklist.xml /usr/local/ispmgr/etc/
 
 > cp -v etc/blacklist.txt /usr/local/ispmgr/etc/
->
+
+> cp -v etc/whitelist.txt /usr/local/ispmgr/etc/
+
 > cp -v addon/domain_blacklist.py /usr/local/ispmgr/addon/
 
 > killall -9 ispmgr
