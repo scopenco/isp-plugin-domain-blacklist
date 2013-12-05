@@ -3,7 +3,7 @@ isp-plugin-domain-blacklist
 
 Documentation
 --------
-ISPmanager plugin checks domain in local block list for events domain.edit, wwwdomain.edit, emaildomain.edit, user.edit and return error if domain exist. The main goal is to prevent users to create domain of public resources like gmail, hotmail, google and redirect web/mail traffic to sniffer. This plugins should be on every shared hosting that use ISPmanager for security reasons.
+ISPmanager plugin checks domain in local block list for events domain.edit, wwwdomain.edit, emaildomain.edit, user.edit and return error (in russian) if domain exist. The main goal is to prevent users to create domain of public resources like gmail, hotmail, google and redirect web/mail traffic to sniffer. This plugins should be on every shared hosting that use ISPmanager for security reasons.
 
 Installing
 ----------
