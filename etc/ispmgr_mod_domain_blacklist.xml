@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * Title: domain_in_blacklist plugin. Check domain in local black list file and show error if domain exist.
+ * Author: Andrey Scopenco
+-->
+<mgrdata>
+    <plugin>
+        <name lang="en">Check domain in black list</name>
+        <description lang="en">Plugin allow to check domain in black list and show error if domain exist.</description>
+        <url>http://scopenco.net</url>
+        <version>0.1</version>
+        <lang>python</lang>
+        <author>Andrey Scopenco</author>
+        <site>https://github.com/scopenco/isp-plugin-domain-blacklist</site>
+        <contact>skype: scopenco; email:andrey@scopenco.net</contact>
+    </plugin>
+
+    <handler name="domain_blacklist.py" type="cgi">
+        <event before="yes">domain.edit</event>
+        <event before="yes">wwwdomain.edit</event>
+        <event before="yes">emaildomain.edit</event>
+        <event before="yes">user.edit</event>
+    </handler>
+</mgrdata>
