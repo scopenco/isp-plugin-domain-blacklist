@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-This plugin check domain in local black list and show error if domain exist.
+This plugin check domain in local black list
+and show error if domain exist.
 
 Author: Andrey Scopenco <andrey@scopenco.net>
 '''
@@ -12,19 +13,23 @@ BLACKLISTFILE = '/usr/local/ispmgr/etc/blacklist.txt'
 WHITELISTFILE = '/usr/local/ispmgr/etc/whitelist.txt'
 
 from xml.dom import minidom
-from os import chdir,getpid,access,R_OK
-from sys import exit,stderr
+from os import chdir, getpid, access, R_OK
+from sys import exit, stderr
 from cgi import FieldStorage
 from traceback import format_exc
+
 
 class ExitOk(Exception):
     pass
 
+
 class DomainError(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
+
 
 class Log(object):
     '''Class used for add debug to ispmgr.log'''
@@ -32,25 +37,30 @@ class Log(object):
         import time
         timenow = time.localtime(time.time())
         self.timef = time.strftime("%b %d %H:%M:%S", timenow)
-        self.log = output;
-        self.plugin_name = plugin;
+        self.log = output
+        self.plugin_name = plugin
         self.fsock = open(self.log, 'a+')
         self.pid = getpid()
         self.script_name = __file__
 
-    def write(self,desc):
+    def write(self, desc):
         if not (desc == "\n"):
             if (desc[-1:] == "\n"):
-                self.fsock.write('%s [%s] ./%s \033[36;40mPLUGIN %s :: %s\033[0m' % \
-                    (self.timef, self.pid, self.script_name, self.plugin_name, desc))
+                self.fsock.write(
+                    '%s [%s] ./%s \033[36;40mPLUGIN %s :: %s\033[0m' % (
+                        self.timef, self.pid, self.script_name,
+                        self.plugin_name, desc))
             else:
-                self.fsock.write('%s [%s] ./%s \033[36;40mPLUGIN %s :: %s\033[0m\n' % \
-                    (self.timef, self.pid, self.script_name, self.plugin_name, desc))
+                self.fsock.write(
+                    '%s [%s] ./%s \033[36;40mPLUGIN %s :: %s\033[0m\n' % (
+                        self.timef, self.pid, self.script_name,
+                        self.plugin_name, desc))
 
     def close(self):
         self.fsock.close()
 
-def xml_doc(elem = None, text = None):
+
+def xml_doc(elem=None, text=None):
     xmldoc = minidom.Document()
     doc = xmldoc.createElement('doc')
     xmldoc.appendChild(doc)
@@ -62,7 +72,8 @@ def xml_doc(elem = None, text = None):
             emp.appendChild(msg_text)
     return xmldoc.toxml('UTF-8')
 
-def xml_error(text,code_num=None):
+
+def xml_error(text, code_num=None):
     xmldoc = minidom.Document()
     doc = xmldoc.createElement('doc')
     xmldoc.appendChild(doc)
@@ -71,20 +82,21 @@ def xml_error(text,code_num=None):
     if code_num:
         code = xmldoc.createAttribute('code')
         error.setAttributeNode(code)
-        error.setAttribute('code',str(code_num))
-        if code_num in [2,3,6]:
+        error.setAttribute('code', str(code_num))
+        if code_num in [2, 3, 6]:
             obj = xmldoc.createAttribute('obj')
             error.setAttributeNode(obj)
-            error.setAttribute('obj',str(text))
+            error.setAttribute('obj', str(text))
             return xmldoc.toxml('UTF-8')
-        elif code_num in [4,5]:
+        elif code_num in [4, 5]:
             val = xmldoc.createAttribute('val')
             error.setAttributeNode(val)
-            error.setAttribute('val',str(text))
+            error.setAttribute('val', str(text))
             return xmldoc.toxml('UTF-8')
     error_text = xmldoc.createTextNode(text.decode('utf-8'))
     error.appendChild(error_text)
     return xmldoc.toxml('UTF-8')
+
 
 def domain_to_idna(dom):
     ''' convert domain to idna format'''
@@ -115,13 +127,13 @@ if __name__ == "__main__":
 
         # check our funcs
         if func not in ['wwwdomain.edit', 'emaildomain.edit',
-                            'domain.edit', 'user.edit']:
+                        'domain.edit', 'user.edit']:
             print xml_doc()
             raise ExitOk('no action')
 
         # deny funcs with elid
         if func in ['emaildomain.edit', 'domain.edit',
-                            'user.edit'] and elid:
+                    'user.edit'] and elid:
             print xml_doc()
             raise ExitOk('no action')
 
@@ -136,7 +148,7 @@ if __name__ == "__main__":
         if alias:
             domains += alias.split()
 
-        if domains[0] == None:
+        if domains[0] is None:
             print xml_doc()
             raise ExitOk('no action')
 
@@ -156,13 +168,16 @@ if __name__ == "__main__":
                         t_dom = '.%s' % d
                         if t_dom.endswith(b_dom):
                             if len(t_dom) == len(b_dom):
-                                raise DomainError(b_dom[1:].decode('idna').encode('utf-8'))
+                                raise DomainError(
+                                    b_dom[1:].decode('idna').encode('utf-8'))
                             else:
                                 print xml_doc()
                                 raise ExitOk('done')
 
         except DomainError, e:
-            print xml_error('Использование домена %s разрешено только 3го уровня!' % e.value, 9)
+            print xml_error(
+                'Использование домена %s разрешено только 3го уровня!' %
+                e.value, 9)
             raise ExitOk('done')
 
         # check exist domain in black lists
@@ -175,7 +190,8 @@ if __name__ == "__main__":
                     for d in domains_idna:
                         t_dom = '.%s' % d
                         if t_dom.endswith(b_dom):
-                            raise DomainError(b_dom[1:].decode('idna').encode('utf-8'))
+                            raise DomainError(
+                                b_dom[1:].decode('idna').encode('utf-8'))
             print xml_doc()
             raise ExitOk('done')
 
@@ -187,5 +203,4 @@ if __name__ == "__main__":
     except:
         print xml_error('please contact support team', code_num='1')
         log.write(format_exc())
-        exit(0)                                                                                                                                                                                
-
+        exit(0)
